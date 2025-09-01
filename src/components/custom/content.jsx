@@ -132,7 +132,7 @@ export default function Content({ darkMode }) {
         onPointerDown={(e) => e.stopPropagation()} 
       /> */}
                               <span
-                                className={`${task.done ? "line-through text-gray-300" : "text-white font-medium"}`}
+                                className="text-white font-medium"
                               >
                                 {task.text}
                               </span>
