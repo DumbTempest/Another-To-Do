@@ -1,37 +1,35 @@
-"use client"; // must be first line
-
-import React, { useState } from "react";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import { Geist, Geist_Mono } from 'next/font/google';
+import { Provider } from './provider';
+import './globals.css';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  variable: '--font-geist-sans',
+  subsets: ['latin']
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: '--font-geist-mono',
+  subsets: ['latin']
 });
 
+export const metadata = {
+  title: 'Todo App',
+  description:
+    'List your stuff!',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico'
+  }
+};
+
+
+
 export default function RootLayout({ children }) {
-  const [darkMode, setDarkMode] = useState(true); // shared state
-
-  // Pass darkMode and setDarkMode to all children
-  const childrenWithProps = React.Children.map(children, (child) => {
-    if (React.isValidElement(child)) {
-      return React.cloneElement(child, { darkMode, setDarkMode });
-    }
-    return child;
-  });
-
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased transition-colors duration-300
-        ${darkMode ? "bg-black text-white" : "bg-white text-black"}`}
-      >
-        {childrenWithProps}
+    <html lang="en" suppressHydrationWarning className="manu-font">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+          <Provider>{children}</Provider>
       </body>
     </html>
   );

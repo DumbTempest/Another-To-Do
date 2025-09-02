@@ -7,18 +7,21 @@ export function Draggable({ id, children, onDragStart }) {
 
   const style = {
     transform: CSS.Translate.toString(transform),
-    cursor: 'grab',
+    width: '100%',
+    height: '100%',
+    cursor: 'grab', // nice visual feedback
   };
 
   return (
-    <div
+    <button
       ref={setNodeRef}
       style={style}
       {...listeners}
       {...attributes}
       onMouseDown={onDragStart}
+      type="button" // prevents form submission if inside a form
     >
       {children}
-    </div>
+    </button>
   );
 }
