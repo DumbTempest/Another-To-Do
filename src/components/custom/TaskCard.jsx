@@ -81,7 +81,7 @@ export default function TaskCard({
             onPointerDown={preventDragStart}
             onMouseDown={preventDragStart}
             onTouchStart={preventDragStart}
-            className="flex items-center justify-center p-2 border-black bg-transparent hover:bg-black/30 transition-colors"
+            className="flex items-center justify-center p-2 border-black bg-transparent hover:bg-black"
           >
             <Check className="w-5 h-5" />
           </Button>
@@ -96,7 +96,7 @@ export default function TaskCard({
             onPointerDown={preventDragStart}
             onMouseDown={preventDragStart}
             onTouchStart={preventDragStart}
-            className="flex items-center justify-center p-2 border-black bg-transparent hover:bg-black/30 transition-colors"
+            className="flex items-center justify-center p-2 border-black bg-transparent hover:bg-black"
           >
             <Pencil className="w-5 h-5" />
           </Button>
@@ -109,7 +109,7 @@ export default function TaskCard({
           onPointerDown={preventDragStart}
           onMouseDown={preventDragStart}
           onTouchStart={preventDragStart}
-          className="flex items-center justify-center p-2 bg-red-600 hover:bg-red-500 transition-colors"
+          className="flex items-center justify-center p-2 bg-red-600 hover:bg-red-500"
         >
           <img
             src="https://cdn-icons-png.flaticon.com/512/3096/3096673.png"

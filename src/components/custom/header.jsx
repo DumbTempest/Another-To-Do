@@ -26,6 +26,14 @@ export default function Header({ darkMode, setDarkMode }) {
           {darkMode ? "Dark Mode" : "Light Mode"}
         </Button>
 
+        <h1
+          className={`hidden sm:block text-3xl sm:text-4xl font-extrabold text-center mb-6 transition-colors duration-300 ${
+            darkMode ? "text-white" : "text-black"
+          }`}
+        >
+          Just Another To Do
+        </h1>
+
         {status === "authenticated" ? (
           <div
             className={`flex items-center gap-3 px-3 py-2 rounded-full ${
@@ -47,7 +55,6 @@ export default function Header({ darkMode, setDarkMode }) {
               className={`p-2 ${
                 darkMode ? "hover:bg-white/10" : "hover:bg-black/10"
               }`}
-              aria-label="Sign out"
             >
               <LogOut className="w-5 h-5" />
             </Button>

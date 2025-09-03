@@ -19,8 +19,10 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { Droppable } from "./droppable";
 import TaskCard from "./TaskCard";
+import { useSession } from "next-auth/react";
 
 export default function Content({ darkMode }) {
+  const { data: session } = useSession(); 
   const [tasks, setTasks] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [message, setMessage] = useState("");
@@ -34,6 +36,7 @@ export default function Content({ darkMode }) {
 
   useEffect(() => {
     const loadTasks = async () => {
+      if (!session) return; 
       const res = await fetch("/api/tasks", {
         method: "GET",
         headers: {
@@ -46,7 +49,7 @@ export default function Content({ darkMode }) {
       }
     };
     loadTasks();
-  }, []);
+  }, [session]);
 
   useEffect(
     () => localStorage.setItem("tasks", JSON.stringify(tasks)),
@@ -145,6 +148,12 @@ export default function Content({ darkMode }) {
   const activeTask = tasks.find((t) => t.id === activeId);
 
   const handleSaveTasks = async () => {
+    if (!session) {
+      setMessage("Please log in to save tasks");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+
     setMessage("Saving...");
     try {
       const res = await fetch("/api/tasks", {
@@ -167,13 +176,13 @@ export default function Content({ darkMode }) {
       setTimeout(() => setMessage(""), 3000);
     }
   };
-
   useEffect(() => {
+    if (!session) return;
     const interval = setInterval(() => {
       handleSaveTasks();
     }, 30000);
     return () => clearInterval(interval);
-  }, [tasks]);
+  }, [tasks, session]);
 
   const handleEdit = (id, category, newText) => {
     setTasks((prev) =>
@@ -185,127 +194,129 @@ export default function Content({ darkMode }) {
     );
   };
   useEffect(() => {
-  if (tasks.length > 0) {
-    handleSaveTasks();
-  }
-}, [tasks]);
-
+    if (session && tasks.length > 0) {
+      handleSaveTasks();
+    }
+  }, [tasks, session]);
 
   return (
     <div
-      className={`flex justify-center min-h-screen items-start py-24 px-4 pt-5 transition-colors duration-300 ${
-        darkMode ? "bg-black text-white" : "bg-white text-black"
-      }`}
-    >
-      <Card
-        className={`w-full max-w-6xl h-full min-h-[60vh] h-auto shadow-xl transition-colors duration-300 ${
-          darkMode
-            ? "bg-gray-900 text-white"
-            : "bg-gray-100 text-black border-2 border-solid border-black"
-        }`}
-      >
-        <CardContent>
-          <div className="mb-6 flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={addTask}
-                className={`flex items-center gap-2 px-3 py-1 font-medium ${
-                  darkMode
-                    ? "bg-black text-white border-white"
-                    : "bg-white text-black border-black"
-                }`}
-              >
-                + Add Task
-              </Button>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                onClick={handleSaveTasks}
-                className={`flex items-center gap-2 px-3 py-1 font-medium ${
-                  darkMode
-                    ? "bg-slate-700 text-white border-white"
-                    : "bg-white text-black border-black"
-                }`}
-              >
-                Save All Tasks
-              </Button>
-
-              {message && (
-                <span
-                  className={`text-sm italic ${
-                    message === "Saved!"
-                      ? "text-green-500"
-                      : message === "Saving..."
-                      ? "text-gray-400"
-                      : "text-red-500"
-                  }`}
-                >
-                  {message}
-                </span>
-              )}
-            </div>
-          </div>
-
-          <DndContext
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-            sensors={sensors}
-            collisionDetection={closestCenter}
+  className={`flex justify-center min-h-screen items-start py-24 px-4 pt-5 transition-colors duration-300 ${
+    darkMode ? "bg-black text-white" : "bg-white text-black"
+  }`}
+>
+  <Card
+    className={`w-full max-w-6xl h-full min-h-[60vh] h-auto transition-colors duration-300 ${
+      darkMode
+        ? "bg-gray-900 text-white"
+        : "bg-gray-100 text-black border-2 border-solid border-black"
+    }`}
+  >
+    <CardContent>
+      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={addTask}
+            className={`flex items-center gap-2 px-3 py-1 font-medium ${
+              darkMode
+                ? "bg-black text-white border-white"
+                : "bg-white text-black border-black"
+            }`}
           >
-            <div className="grid grid-cols-3 gap-4">
-              {categories.map((cat) => (
-                <SortableContext
-                  key={cat}
-                  items={getTasksByCategory(cat).map((t) => t.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <Droppable
-                    id={cat}
-                    style={{
-                      padding: "12px",
-                      border: darkMode
-                        ? "2px dashed #fff9f9ff"
-                        : "2px dashed #000000",
-                      borderRadius: "8px",
-                      opacity: 0.8,
-                    }}
-                  >
-                    <h3 className="text-xl font-bold mb-2 text-center capitalize">
-                      {cat}
-                    </h3>
-                    <ul className="space-y-2 min-h-[50px]">
-                      {getTasksByCategory(cat).map((task) => (
-                        <TaskCard
-                          key={task.id}
-                          task={task}
-                          categoryColors={categoryColors}
-                          setTasks={setTasks}
-                          handleEdit={handleEdit}
-                        />
-                      ))}
-                    </ul>
-                  </Droppable>
-                </SortableContext>
-              ))}
-            </div>
+            + Add Task
+          </Button>
+        </div>
 
-            <DragOverlay>
-              {activeTask && (
-                <TaskCard
-                  task={activeTask}
-                  categoryColors={categoryColors}
-                  setTasks={setTasks}
-                  handleEdit={handleEdit}
-                />
-              )}
-            </DragOverlay>
-          </DndContext>
-        </CardContent>
-      </Card>
-    </div>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            onClick={handleSaveTasks}
+            className={`flex items-center gap-2 px-3 py-1 font-medium ${
+              darkMode
+                ? "bg-slate-700 text-white border-white"
+                : "bg-white text-black border-black"
+            }`}
+          >
+            Save All Tasks
+          </Button>
+
+          {message && (
+            <span
+              className={`text-sm ${
+                message === "Saved"
+                  ? "text-green-500"
+                  : message === "Saving.."
+                  ? "text-gray-400"
+                  : "text-red-500"
+              }`}
+            >
+              {message}
+            </span>
+          )}
+        </div>
+      </div>
+
+            <DndContext
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+        sensors={sensors}
+        collisionDetection={closestCenter}
+      >
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {categories.map((cat) => (
+            <SortableContext
+              key={cat}
+              items={getTasksByCategory(cat).map((t) => t.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <Droppable
+                id={cat}
+                style={{
+                  padding: "12px",
+                  border: darkMode
+                    ? "2px dashed #fff9f9ff"
+                    : "2px dashed #000000",
+                  borderRadius: "8px",
+                  opacity: 0.8,
+                }}
+              >
+                <h3 className="text-lg sm:text-xl font-bold mb-2 text-center capitalize">
+                  {cat}
+                </h3>
+                <ul className="space-y-2 min-h-[50px]">
+                  {getTasksByCategory(cat).map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      categoryColors={categoryColors}
+                      setTasks={setTasks}
+                      handleEdit={handleEdit}
+                    />
+                  ))}
+                </ul>
+              </Droppable>
+            </SortableContext>
+          ))}
+        </div>
+
+
+        <DragOverlay>
+          {activeTask && (
+            <TaskCard
+              task={activeTask}
+              categoryColors={categoryColors}
+              setTasks={setTasks}
+              handleEdit={handleEdit}
+            />
+          )}
+        </DragOverlay>
+      </DndContext>
+    </CardContent>
+  </Card>
+</div>
+
   );
 }

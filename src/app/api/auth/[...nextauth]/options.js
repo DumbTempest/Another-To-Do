@@ -95,6 +95,6 @@ export const authOptions = {
         signOut: '/auth/signout',
         error: '/auth/error',
         verifyRequest: '/auth/verify-request',
-        newUser: null // Will disable the new account creation screen
+        newUser: null
     }
 };

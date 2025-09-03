@@ -11,27 +11,27 @@ export default function LoginModal({ isOpen, onClose, darkMode }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black"
       onClick={onClose}
     >
       <div
-        className={`w-full max-w-sm p-6 rounded-2xl shadow-lg ${
-          darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
+        className={`w-full max-w-sm p-6 rounded-2xl ${
+          darkMode ? "bg-gray-900 text-white" : "bg-white text-white"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        <CardContent className="flex flex-col items-center gap-6 p-0">
+        <CardContent className="flex flex-col items-center gap-6 ">
           <h2 className="text-2xl font-bold">Sign In</h2>
 
           <Button
             variant="outline"
-            className="w-full flex items-center justify-center gap-2"
+            className={`w-full px-8 py-6 text-lg rounded ${
+            darkMode ? "bg-slate-900 text-white" : "bg-gray-200 text-black"
+          }`}
             onClick={() => signIn("google")}
           >
             Google
           </Button>
-
-          <Separator className="my-4 w-full" />
 
           <Button
             variant="ghost"
