@@ -10,7 +10,7 @@ Live Demo: [https://another-to-do-kappa.vercel.app/](https://another-to-do-kappa
 
 - Authentication with NextAuth (Google, GitHub, Discord)  
 - Persistent task storage using MongoDB  
-- Responsive UI built with TailwindCSS and ShadCN UI  
+- Responsive UI built with TailwindCSS and ShadCN Library
 - Organize tasks across multiple categories  
 - Drag and drop functionality powered by dnd-kit  
 
@@ -20,7 +20,7 @@ Live Demo: [https://another-to-do-kappa.vercel.app/](https://another-to-do-kappa
 
 - Framework: Next.js  
 - Library: React  
-- UI: TailwindCSS + ShadCN UI  
+- UI: TailwindCSS + ShadCN   
 - Authentication: NextAuth.js  
 - Database: MongoDB (via Mongoose)  
 - Drag & Drop: dnd-kit  
