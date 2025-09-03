@@ -12,25 +12,16 @@ export default function LoginModal({ isOpen, onClose, darkMode }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      onClick={onClose} // click outside closes modal
+      onClick={onClose}
     >
       <div
         className={`w-full max-w-sm p-6 rounded-2xl shadow-lg ${
           darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
         }`}
-        onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside modal
+        onClick={(e) => e.stopPropagation()}
       >
         <CardContent className="flex flex-col items-center gap-6 p-0">
           <h2 className="text-2xl font-bold">Sign In</h2>
-
-          <Button
-          className={`px-8 py-6 text-lg rounded ${darkMode ? "bg-slate-900 text-white" : "bg-gray-200 text-black"}`}
-          onClick={() => setDarkMode(!darkMode)}
-        >
-
-          {darkMode ? "🌙 Dark Mode" : "☀️ Light Mode"}
-
-        </Button>
 
           <Button
             variant="outline"

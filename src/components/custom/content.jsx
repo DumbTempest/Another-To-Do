@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DndContext, DragOverlay, closestCenter } from "@dnd-kit/core";
-import { Plus } from "lucide-react"; 
 import {
   SortableContext,
   arrayMove,
@@ -24,6 +23,7 @@ import TaskCard from "./TaskCard";
 export default function Content({ darkMode }) {
   const [tasks, setTasks] = useState([]);
   const [activeId, setActiveId] = useState(null);
+  const [message, setMessage] = useState("");
 
   const categories = ["pending", "ongoing", "done"];
   const categoryColors = {
@@ -145,6 +145,7 @@ export default function Content({ darkMode }) {
   const activeTask = tasks.find((t) => t.id === activeId);
 
   const handleSaveTasks = async () => {
+    setMessage("Saving...");
     try {
       const res = await fetch("/api/tasks", {
         method: "POST",
@@ -153,10 +154,42 @@ export default function Content({ darkMode }) {
         },
         body: JSON.stringify({ tasks }),
       });
+
+      if (res.ok) {
+        setMessage("Saved!");
+        setTimeout(() => setMessage(""), 2000);
+      } else {
+        throw new Error("Save failed");
+      }
     } catch (error) {
       console.error("Error saving tasks:", error);
+      setMessage("Error while saving!");
+      setTimeout(() => setMessage(""), 3000);
     }
   };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      handleSaveTasks();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [tasks]);
+
+  const handleEdit = (id, category, newText) => {
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.id === id && task.category === category
+          ? { ...task, text: newText }
+          : task
+      )
+    );
+  };
+  useEffect(() => {
+  if (tasks.length > 0) {
+    handleSaveTasks();
+  }
+}, [tasks]);
+
 
   return (
     <div
@@ -173,54 +206,48 @@ export default function Content({ darkMode }) {
       >
         <CardContent>
           <div className="mb-6 flex justify-between items-center">
-  <div className="flex items-center gap-2">
-    <Button
-      variant="outline"
-      onClick={addTask}
-      className={`flex items-center gap-2 px-3 py-1 font-medium ${
-        darkMode
-          ? "bg-black text-white border-white"
-          : "bg-white text-black border-black"
-      }`}
-    >
-      + Add Task
-    </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={addTask}
+                className={`flex items-center gap-2 px-3 py-1 font-medium ${
+                  darkMode
+                    ? "bg-black text-white border-white"
+                    : "bg-white text-black border-black"
+                }`}
+              >
+                + Add Task
+              </Button>
+            </div>
 
-    <Button
-      variant="outline"
-      onClick={() =>
-        handleSaveTasks()
-      }
-      className={`flex items-center gap-2 px-3 py-1 font-medium ${
-        darkMode
-          ? "bg-black text-white border-white"
-          : "bg-white text-black border-black"
-      }`}
-    >
-      <Plus className="w-4 h-4" />
-      Save
-    </Button>
-  </div>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                onClick={handleSaveTasks}
+                className={`flex items-center gap-2 px-3 py-1 font-medium ${
+                  darkMode
+                    ? "bg-slate-700 text-white border-white"
+                    : "bg-white text-black border-black"
+                }`}
+              >
+                Save All Tasks
+              </Button>
 
-  <div className="flex items-center gap-4">
-    <Button
-      variant="outline"
-      className={`flex items-center gap-2 px-3 py-1 font-medium ${
-        darkMode
-          ? "bg-slate-700 text-white border-white"
-          : "bg-white text-black border-black"
-      }`}
-    >
-      <img
-        src="https://cdn-icons-png.flaticon.com/512/1828/1828479.png"
-        alt="Archive All"
-        className="w-5 h-4"
-      />
-      Archive
-    </Button>
-  </div>
-</div>
-
+              {message && (
+                <span
+                  className={`text-sm italic ${
+                    message === "Saved!"
+                      ? "text-green-500"
+                      : message === "Saving..."
+                      ? "text-gray-400"
+                      : "text-red-500"
+                  }`}
+                >
+                  {message}
+                </span>
+              )}
+            </div>
+          </div>
 
           <DndContext
             onDragStart={handleDragStart}
@@ -257,6 +284,7 @@ export default function Content({ darkMode }) {
                           task={task}
                           categoryColors={categoryColors}
                           setTasks={setTasks}
+                          handleEdit={handleEdit}
                         />
                       ))}
                     </ul>
@@ -271,6 +299,7 @@ export default function Content({ darkMode }) {
                   task={activeTask}
                   categoryColors={categoryColors}
                   setTasks={setTasks}
+                  handleEdit={handleEdit}
                 />
               )}
             </DragOverlay>
