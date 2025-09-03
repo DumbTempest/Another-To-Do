@@ -20,12 +20,17 @@ import { v4 as uuidv4 } from "uuid";
 import { Droppable } from "./droppable";
 import TaskCard from "./TaskCard";
 import { useSession } from "next-auth/react";
+import { Input } from "@/components/ui/input";
 
 export default function Content({ darkMode }) {
   const { data: session } = useSession(); 
   const [tasks, setTasks] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [message, setMessage] = useState("");
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [taskText, setTaskText] = useState("");
+  const [taskCategory, setTaskCategory] = useState("pending");
 
   const categories = ["pending", "ongoing", "done"];
   const categoryColors = {
@@ -39,9 +44,7 @@ export default function Content({ darkMode }) {
       if (!session) return; 
       const res = await fetch("/api/tasks", {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       });
       if (res.ok) {
         const data = await res.json();
@@ -51,28 +54,22 @@ export default function Content({ darkMode }) {
     loadTasks();
   }, [session]);
 
-  useEffect(
-    () => localStorage.setItem("tasks", JSON.stringify(tasks)),
-    [tasks]
-  );
+  useEffect(() => localStorage.setItem("tasks", JSON.stringify(tasks)), [tasks]);
 
-  const addTask = () => {
-    const text = prompt("Enter new task:")?.trim();
-    if (!text) return;
-    let category = prompt("Select category: Pending, Ongoing, Done")
-      ?.toLowerCase()
-      .trim();
-    if (!categories.includes(category)) category = "pending";
+  const handleAddTask = () => {
+    if (!taskText.trim()) return;
     setTasks((prev) => [
       ...prev,
-      { id: uuidv4(), text, category, done: category === "done" },
+      { id: uuidv4(), text: taskText.trim(), category: taskCategory, done: taskCategory === "done" },
     ]);
+    setTaskText("");
+    setTaskCategory("pending");
+    setIsModalOpen(false);
   };
 
   const getTasksByCategory = (cat) => tasks.filter((t) => t.category === cat);
 
   const handleDragStart = ({ active }) => setActiveId(active.id);
-
   const handleDragOver = ({ active, over }) => {
     if (!over) return;
     const activeTask = tasks.find((t) => t.id === active.id);
@@ -81,9 +78,7 @@ export default function Content({ darkMode }) {
     if (categories.includes(over.id) && activeTask.category !== over.id) {
       setTasks((prev) =>
         prev.map((t) =>
-          t.id === active.id
-            ? { ...t, category: over.id, done: over.id === "done" }
-            : t
+          t.id === active.id ? { ...t, category: over.id, done: over.id === "done" } : t
         )
       );
     } else {
@@ -92,11 +87,7 @@ export default function Content({ darkMode }) {
         setTasks((prev) =>
           prev.map((t) =>
             t.id === active.id
-              ? {
-                  ...t,
-                  category: overTask.category,
-                  done: overTask.category === "done",
-                }
+              ? { ...t, category: overTask.category, done: overTask.category === "done" }
               : t
           )
         );
@@ -114,9 +105,7 @@ export default function Content({ darkMode }) {
     if (categories.includes(over.id) && activeTask.category !== over.id) {
       setTasks((prev) =>
         prev.map((t) =>
-          t.id === active.id
-            ? { ...t, category: over.id, done: over.id === "done" }
-            : t
+          t.id === active.id ? { ...t, category: over.id, done: over.id === "done" } : t
         )
       );
       return;
@@ -139,9 +128,7 @@ export default function Content({ darkMode }) {
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 200, tolerance: 8 },
-    }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: undefined })
   );
 
@@ -158,165 +145,184 @@ export default function Content({ darkMode }) {
     try {
       const res = await fetch("/api/tasks", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tasks }),
       });
 
       if (res.ok) {
         setMessage("Saved!");
         setTimeout(() => setMessage(""), 2000);
-      } else {
-        throw new Error("Save failed");
-      }
+      } else throw new Error("Save failed");
     } catch (error) {
       console.error("Error saving tasks:", error);
       setMessage("Error while saving!");
       setTimeout(() => setMessage(""), 3000);
     }
   };
+
   useEffect(() => {
     if (!session) return;
     const interval = setInterval(() => {
       handleSaveTasks();
-    }, 30000);
+    }, 40000);
     return () => clearInterval(interval);
   }, [tasks, session]);
 
   const handleEdit = (id, category, newText) => {
     setTasks((prev) =>
-      prev.map((task) =>
-        task.id === id && task.category === category
-          ? { ...task, text: newText }
-          : task
-      )
+      prev.map((task) => (task.id === id && task.category === category ? { ...task, text: newText } : task))
     );
   };
-  useEffect(() => {
-    if (session && tasks.length > 0) {
-      handleSaveTasks();
-    }
-  }, [tasks, session]);
 
   return (
     <div
-  className={`flex justify-center min-h-screen items-start py-24 px-4 pt-5 transition-colors duration-300 ${
-    darkMode ? "bg-black text-white" : "bg-white text-black"
-  }`}
->
-  <Card
-    className={`w-full max-w-6xl h-full min-h-[60vh] h-auto transition-colors duration-300 ${
-      darkMode
-        ? "bg-gray-900 text-white"
-        : "bg-gray-100 text-black border-2 border-solid border-black"
-    }`}
-  >
-    <CardContent>
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={addTask}
-            className={`flex items-center gap-2 px-3 py-1 font-medium ${
-              darkMode
-                ? "bg-black text-white border-white"
-                : "bg-white text-black border-black"
-            }`}
-          >
-            + Add Task
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            onClick={handleSaveTasks}
-            className={`flex items-center gap-2 px-3 py-1 font-medium ${
-              darkMode
-                ? "bg-slate-700 text-white border-white"
-                : "bg-white text-black border-black"
-            }`}
-          >
-            Save All Tasks
-          </Button>
-
-          {message && (
-            <span
-              className={`text-sm ${
-                message === "Saved"
-                  ? "text-green-500"
-                  : message === "Saving.."
-                  ? "text-gray-400"
-                  : "text-red-500"
-              }`}
-            >
-              {message}
-            </span>
-          )}
-        </div>
-      </div>
-
-            <DndContext
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-        sensors={sensors}
-        collisionDetection={closestCenter}
+      className={`flex justify-center min-h-screen items-start py-24 px-4 pt-5 transition-colors duration-300 ${
+        darkMode ? "bg-black text-white" : "bg-white text-black"
+      }`}
+    >
+      <Card
+        className={`w-full max-w-6xl h-full min-h-[60vh] h-auto transition-colors duration-300 ${
+          darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black border-2 border-solid border-black"
+        }`}
       >
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categories.map((cat) => (
-            <SortableContext
-              key={cat}
-              items={getTasksByCategory(cat).map((t) => t.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <Droppable
-                id={cat}
-                style={{
-                  padding: "12px",
-                  border: darkMode
-                    ? "2px dashed #fff9f9ff"
-                    : "2px dashed #000000",
-                  borderRadius: "8px",
-                  opacity: 0.8,
-                }}
+        <CardContent>
+          <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsModalOpen(true)}
+                className={`flex items-center gap-2 px-3 py-1 font-medium ${
+                  darkMode ? "bg-black text-white border-white" : "bg-white text-black border-black"
+                }`}
               >
-                <h3 className="text-lg sm:text-xl font-bold mb-2 text-center capitalize">
-                  {cat}
-                </h3>
-                <ul className="space-y-2 min-h-[50px]">
-                  {getTasksByCategory(cat).map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      categoryColors={categoryColors}
-                      setTasks={setTasks}
-                      handleEdit={handleEdit}
-                    />
-                  ))}
-                </ul>
-              </Droppable>
-            </SortableContext>
-          ))}
-        </div>
+                + Add Task
+              </Button>
+            </div>
 
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                onClick={handleSaveTasks}
+                className={`flex items-center gap-2 px-3 py-1 font-medium ${
+                  darkMode ? "bg-slate-700 text-white border-white" : "bg-white text-black border-black"
+                }`}
+              >
+                Save All Tasks
+              </Button>
 
-        <DragOverlay>
-          {activeTask && (
-            <TaskCard
-              task={activeTask}
-              categoryColors={categoryColors}
-              setTasks={setTasks}
-              handleEdit={handleEdit}
-            />
-          )}
-        </DragOverlay>
-      </DndContext>
-    </CardContent>
-  </Card>
-</div>
+              {message && (
+                <span
+                  className={`text-sm ${
+                    message === "Saved"
+                      ? "text-green-500"
+                      : message === "Saving.."
+                      ? "text-gray-400"
+                      : "text-red-500"
+                  }`}
+                >
+                  {message}
+                </span>
+              )}
+            </div>
+          </div>
 
+          {isModalOpen && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+    <div
+      className={`bg-white dark:bg-gray-900 p-6 rounded-lg border border-black w-170 text-black dark:text-white`}
+    >
+      <h2 className="text-lg font-bold mb-4">Add Task</h2>
+      <Input
+        placeholder="Enter task"
+        value={taskText}
+        onChange={(e) => setTaskText(e.target.value)}
+        className="mb-3 border border-black bg-white dark:bg-gray-800 text-black dark:text-white"
+      />
+      <select
+        value={taskCategory}
+        onChange={(e) => setTaskCategory(e.target.value)}
+        className="w-full mb-4 p-2 border border-black rounded bg-white dark:bg-gray-800 text-black dark:text-white"
+      >
+        {categories.map((cat) => (
+          <option key={cat} value={cat} className="text-black dark:text-white">
+            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+          </option>
+        ))}
+      </select>
+      <div className="flex justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={() => setIsModalOpen(false)}
+          className=" border border-black text-black dark:text-white"
+        >
+          Close
+        </Button>
+        <Button
+          onClick={handleAddTask}
+          className=" border border-black text-black bg-white dark:bg-gray-800 dark:text-white"
+        >
+          OK
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
+
+          <DndContext
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            sensors={sensors}
+            collisionDetection={closestCenter}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {categories.map((cat) => (
+                <SortableContext
+                  key={cat}
+                  items={getTasksByCategory(cat).map((t) => t.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <Droppable
+                    id={cat}
+                    style={{
+                      padding: "12px",
+                      border: darkMode ? "2px dashed #fff9f9ff" : "2px dashed #000000",
+                      borderRadius: "8px",
+                      opacity: 0.8,
+                    }}
+                  >
+                    <h3 className="text-lg sm:text-xl font-bold mb-2 text-center capitalize">
+                      {cat}
+                    </h3>
+                    <ul className="space-y-2 min-h-[50px]">
+                      {getTasksByCategory(cat).map((task) => (
+                        <TaskCard
+                          key={task.id}
+                          task={task}
+                          categoryColors={categoryColors}
+                          setTasks={setTasks}
+                          handleEdit={handleEdit}
+                        />
+                      ))}
+                    </ul>
+                  </Droppable>
+                </SortableContext>
+              ))}
+            </div>
+
+            <DragOverlay>
+              {activeTask && (
+                <TaskCard
+                  task={activeTask}
+                  categoryColors={categoryColors}
+                  setTasks={setTasks}
+                  handleEdit={handleEdit}
+                />
+              )}
+            </DragOverlay>
+          </DndContext>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

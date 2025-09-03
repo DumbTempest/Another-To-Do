@@ -21,7 +21,7 @@ export default function LoginModal({ isOpen, onClose, darkMode }) {
         onClick={(e) => e.stopPropagation()}
       >
         <CardContent className="flex flex-col items-center gap-6 ">
-          <h2 className="text-2xl font-bold">Sign In</h2>
+          <h2 className={`text-2xl font-bold ${darkMode ? "text-white" : "text-black"}`}>Sign In</h2>
 
           <Button
             variant="outline"
@@ -34,8 +34,10 @@ export default function LoginModal({ isOpen, onClose, darkMode }) {
           </Button>
 
           <Button
-            variant="ghost"
-            className="w-full"
+            variant="outline"
+            className={`w-full px-4 py-2 text-md rounded ${
+            darkMode ? "bg-slate-900 text-white" : "bg-gray-200 text-black"
+          }`}
             onClick={onClose}
           >
             Close
