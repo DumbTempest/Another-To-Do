@@ -26,14 +26,12 @@ export const authOptions = {
             let existingUser = await User.findOne({ email: user.email });
 
             if (!existingUser) {
-                // Sanitize and validate username
-                const rawName = user.name || 'Anonymous';
+                const rawName = user.name || 'AnonUser';
                 const baseUsername = rawName
                     .toLowerCase()
                     .replace(/\s+/g, '')
                     .replace(/[^a-z0-9_.]/g, '');
 
-                // Fallback if sanitization results in empty username
                 const safeUsername = baseUsername || `user${Date.now()}`;
 
                 const newUser = new User({
